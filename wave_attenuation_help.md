@@ -7,11 +7,11 @@ at the specified depth, divided by the pressure signal what would be obtained
 at a depth that is below the wave troughs.
 
 Linear (also called infinitesimal) wave dynamics are assumed here, so the wave
-attenuation factor is given by $cosh(kz+kH))/cosh(kH)$ where $z$ is a negative
-number (i.e. it is the vertical coordinate), $k$ is the wave number, which is
-computed from wave period using the equation for infinitesimal wave phase speed
-$c = \sqrt(g k \tanh(k H))}$ where $g$ is the acceleration due to gravity.
-(The actual computation of period from $k$ is done with a root-finding method.)
+attenuation factor is given by $cosh(k*(z+H))/cosh(k*H)$ where $k$ is the wave
+number ($2*\pi/wavelength$), z$ is the vertical coordinate of the observation
+(a negative number). The value of $k$ is calculated from the wave period by
+using a root-finding method on the dispersion equation for infinitesimal waves
+$\omega^2 = g*k*tanh(k*H)$ where $g$ is the acceleration due to gravity.
 
 There are many sources for the equations above, and users who want to learn
 more ought to start by consulting a textbook with which they are already

@@ -2,33 +2,34 @@ library(shiny)
 
 debug <- FALSE
 
-#' Wave celerity
-#' @param k wavenumber [1/m]
-#' @param H water depth [m]
-#' @return celerity (wave phase speed) [m/s]
-celerity <- function(k, H)
-{
-    g <- 9.8
-    sqrt(g / k * tanh(k * H))
-}
+## UNUSED: #' Wave celerity
+## UNUSED: #' @param k wavenumber [1/m]
+## UNUSED: #' @param H water depth [m]
+## UNUSED: #' @return celerity (wave phase speed) [m/s]
+## UNUSED: celerity <- function(k, H)
+## UNUSED: {
+## UNUSED:     g <- 9.8
+## UNUSED:     sqrt(g / k * tanh(k * H))
+## UNUSED: }
+
 
 #' Wavenumber from wave period
 #' @param tau wave period [s]
 #' @param H water depth [m]
+#' @param g acceleration due to gravity [m/s^2]
 #' @return wavenumber [1/m]
-tau2k <- function(tau, H)
+tau2k <- function(tau, H, g=9.8)
 {
-    g <- 9.8
-    ntau <- length(tau)
-    k <- rep(NA, ntau)
-    for (i in seq_len(ntau)) {
-        k[i] <- uniroot(function(x) x-tau/celerity(tau[i], H), c(0,10))$root
+    omega <- function(k, H, g=9.8)
+        sqrt(g * k * tanh(k * H))
+    o <- 2 * pi / tau # omega [rad/s]
+    n <- length(o)
+    k <- rep(NA, n)
+    for (i in seq_len(n)) {
+        k[i] <- uniroot(function(K) o[i] - omega(K, H), 2*pi/c(1e3,1e-3))$root
     }
     k
 }
-
-tau2k <- function(tau, H)
-    tau / celerity(tau, H)
 
 #' Ratio of wave pressure signal at depth z to that just below the wave
 #' @param k wavenumber [1/m]
@@ -48,7 +49,7 @@ ui <- fluidPage(h5("Wave pressure reduction through the water column"),
                                                 selected="Hide",
                                                 inline=TRUE))),
                 fluidRow(conditionalPanel(condition="input.instructions=='Show'",
-                                          includeMarkdown("wave_attenuation_help.md"))),
+                                          withMathJax(includeMarkdown("wave_attenuation_help.md")))),
                 fluidRow(column(6, sliderInput(inputId="H",
                                                label="Water depth [m]",
                                                min=1, max=100, value=10, step=1)),
@@ -74,7 +75,7 @@ server <- function(input, output) {
         plot(tau, rf, type="l", lwd=2,
              xlab="Period [s]", ylab="Pressure reduction factor",
              xaxs="i", ylim=c(0, 1), yaxs="i")
-        mtext(sprintf("Observation depth is %.1fm below the surface", -z), side=3, line=0, adj=1)
+        mtext(sprintf("Observation depth is %.2fm above the bottom", z+H), side=3, line=0, adj=1)
         grid()
     })
 }
