@@ -6,7 +6,8 @@ The plot shows (in a solid line) the dependence of pressure-reduction factor,
 which is the ratio of pressure signal measured at a specified depth, divided by
 the pressure signal what would be felt just below the wave troughs and (in a
 dashed line) the length of the wave. Both are plotted as a function of wave
-period.
+period. Clicking in the plot will display values above the plot, which can be
+handy for extracting values for use in other analyses.
 
 The calculation is based on several assumptions. First, the bottom is assumed
 to be flat, which means that the tool is of limited use for shoaling waves,

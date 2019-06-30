@@ -1,7 +1,7 @@
 library(shiny)
 
 debug <- FALSE
-version <- "1.1"
+version <- "1.2"
 date <- "2019 June 30"
 
 #' Wavenumber from wave period
@@ -48,23 +48,29 @@ ui <- fluidPage(h5(paste("Wave pressure reduction through the water column (vers
                          column(6, sliderInput(inputId="hab",
                                                label="Sensor height above bottom",
                                                min=0, max=100, value=0))),
-                fluidRow(uiOutput(outputId="click")),
+                fluidRow(uiOutput(outputId="showSample")),
                 fluidRow(plotOutput("plot", click="click")))
 
 server <- function(input, output, session) {
+
+    state <- reactiveValues(msg=NULL)
 
     observeEvent(input$H, {
                  updateSliderInput(session=session, inputId="hab", value=0, max=input$H)
                 })
 
-    output$click <- renderText({
+    output$showSample <- renderText({
+        if (!is.null(state$msg)) state$msg else "Click in the plot to show values here."
+    })
+
+    observeEvent(input$click, {
         tau <- input$click$x
         H <- abs(input$H)
         z <- -H + input$hab
         k <- tau2k(tau, H)
         rf <- reductionFactor(k=k, z=z, H=H)
-        paste(sprintf(" Period: %.1fs, Pressure Factor: %.2g, Wave Length: %.1fm",
-                      tau, rf, 2 * pi / k))
+        state$msg <<- paste(sprintf(" Period: %.1fs, Pressure Factor: %.2g, Wave Length: %.1fm",
+                                    tau, rf, 2 * pi / k))
     })
 
     output$plot <- renderPlot({
