@@ -34,13 +34,13 @@ reductionFactor <- function(k, z, H)
     cosh(k*(z+H))/ cosh(k*H)
 }
 
-ui <- fluidPage(h4(paste("Wave pressure reduction through the water column (version ", version, ", ", date, ")", sep="")),
-                fluidRow(column(2, radioButtons("instructions",
-                                                "Instructions",
-                                                choices=c("Hide", "Show"),
-                                                selected="Hide",
-                                                inline=TRUE))),
-                fluidRow(conditionalPanel(condition="input.instructions=='Show'",
+ui <- fluidPage(h5(paste("Wave pressure reduction through the water column (version ", version, ", ", date, ")", sep="")),
+                fluidRow(column(12, radioButtons("instructions",
+                                                 "",
+                                                 choices=c("Hide Documentation", "Show Documentation"),
+                                                 selected="Hide Documentation",
+                                                 inline=TRUE))),
+                fluidRow(conditionalPanel(condition="input.instructions=='Show Documentation'",
                                           withMathJax(includeMarkdown("wave_attenuation_help.md")))),
                 fluidRow(column(6, sliderInput(inputId="H",
                                                label="Water depth [m]",
@@ -48,12 +48,25 @@ ui <- fluidPage(h4(paste("Wave pressure reduction through the water column (vers
                          column(6, sliderInput(inputId="hab",
                                                label="Sensor height above bottom",
                                                min=0, max=100, value=0))),
-                fluidRow(plotOutput("plot")))
+                fluidRow(uiOutput(outputId="hover")),
+                fluidRow(plotOutput("plot", hover="hover")))
 
 server <- function(input, output, session) {
+
     observeEvent(input$H, {
                  updateSliderInput(session=session, inputId="hab", value=0, max=input$H)
                 })
+
+    output$hover <- renderText({
+        tau <- input$hover$x
+        H <- abs(input$H)
+        z <- -H + input$hab
+        k <- tau2k(tau, H)
+        rf <- reductionFactor(k=k, z=z, H=H)
+        paste(sprintf(" Period: %.1fs, Pressure Factor: %.2g, Wave Length: %.1fm",
+                      tau, rf, 2 * pi / k))
+    })
+
     output$plot <- renderPlot({
         tau <- seq(1, 12, length.out=500)
         H <- abs(input$H)
@@ -72,7 +85,7 @@ server <- function(input, output, session) {
              xaxs="i", ylim=c(0, 1), yaxs="i")
         ##mtext(sprintf("Solid: pressure factor; dashed: wave length", z+H), side=3, line=-1, adj=0)
         legend("topleft", horiz=TRUE, lty=c("solid", "dashed"), lwd=2,
-               legend=c("pressure factor", "wave length"), bg="white")
+               legend=c("Pressure Factor", "Wave Length"), bg="white")
         ##mtext(sprintf("Sensor %.1fm above bottom", z+H), side=3, line=0.25, adj=0)
         par(new=TRUE)
         plot(tau, 2*pi/k, axes=FALSE, xlab="", ylab="", type="l", lwd=2, xaxs="i", yaxs="i", lty="dashed",
