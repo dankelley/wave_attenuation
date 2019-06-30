@@ -9,19 +9,21 @@ dashed line) the length of the wave. Both are plotted as a function of wave
 period.
 
 The calculation is based on several assumptions. First, the bottom is assumed
-to be flat.  Second, the theory of linear waves is employed, meaning that it is
-assumed that wave height is very small compared with water depth. Third, the
-effects of both friction and the rotation of the earth are ignored.  With these
-assumptions, pressure-reduction factor may be computed as
-$cosh(k*(z+H))/cosh(k*H)$ where $k$ is the wave number (i.e. $2\pi$ divided by
-wave length), $z$ is the height of the observation above the surface of the
-water (this is a negative thus, computed from the right-hand slider in the
-app), $H$ is the total water depth (provided by the left-hand slider), and
-$cosh$ is the hyperbolic cosine function. The value of $k$ is calculated from
-the wave period by using a root-finding method on the dispersion equation for
-infinitesimal waves $\omega^2 = g*k*tanh(k*H)$ where $\omega$ is the frequency
-($2\pi$ divided by the period), $g$ is the acceleration due to gravity and
-$tanh$ is the hyperbolic tangent function.
+to be flat, which means that the tool is of limited use for shoaling waves,
+e.g. if the water depth changes significantly over the wave length.  Second,
+the theory of linear waves is employed, meaning that it is assumed that wave
+height is very small compared with water depth. Third, the effects of both
+friction and the rotation of the earth are ignored.  With these assumptions,
+pressure-reduction factor may be computed as $cosh(k*(z+H))/cosh(k*H)$ where
+$k$ is the wave number (i.e. $2\pi$ divided by wave length), $z$ is the height
+of the observation above the surface of the water (this is a negative thus,
+computed from the right-hand slider in the app), $H$ is the total water depth
+(provided by the left-hand slider), and $cosh$ is the hyperbolic cosine
+function. The value of $k$ is calculated from the wave period by using a
+root-finding method on the dispersion equation for infinitesimal waves
+$\omega^2 = g*k*tanh(k*H)$ where $\omega$ is the frequency ($2\pi$ divided by
+the period), $g$ is the acceleration due to gravity and $tanh$ is the
+hyperbolic tangent function.
 
 There are many sources for the equations above, and users who want to learn
 more ought to start by consulting a textbook with which they are already

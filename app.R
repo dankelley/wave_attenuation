@@ -1,8 +1,8 @@
 library(shiny)
 
 debug <- FALSE
-version <- "1.0"
-date <- "2019 June 29"
+version <- "1.1"
+date <- "2019 June 30"
 
 #' Wavenumber from wave period
 #' @param tau wave period [s]
@@ -44,38 +44,41 @@ ui <- fluidPage(h4(paste("Wave pressure reduction through the water column (vers
                                           withMathJax(includeMarkdown("wave_attenuation_help.md")))),
                 fluidRow(column(6, sliderInput(inputId="H",
                                                label="Water depth [m]",
-                                               min=1, max=100, value=20, step=1)),
-                         column(6, sliderInput(inputId="habOverH",
-                                               label="Ratio of sensor height above bottom to water depth",
-                                               min=0, max=1, value=0.05, step=0.01))),
+                                               min=1, max=100, value=20)),
+                         column(6, sliderInput(inputId="hab",
+                                               label="Sensor height above bottom",
+                                               min=0, max=100, value=0))),
                 fluidRow(plotOutput("plot")))
 
-server <- function(input, output) {
+server <- function(input, output, session) {
+    observeEvent(input$H, {
+                 updateSliderInput(session=session, inputId="hab", value=0, max=input$H)
+                })
     output$plot <- renderPlot({
         tau <- seq(1, 12, length.out=500)
         H <- abs(input$H)
-        z <- - H * (1 - input$habOverH)
+        z <- -H + input$hab
         par(mar=c(3.3, 3.3, 1, 3.3), mgp=c(2, 0.7, 0))
         k <- tau2k(tau, H)
         rf <- reductionFactor(k=k, z=z, H=H)
         if (debug) {
-            cat(file=stderr(), "z=", z, "H=", H, "\n")
+            cat(file=stderr(), "hab=", input$hab, ", H=", H, "; therefore z=", z, "\n")
             cat(file=stderr(), "    head(k)=", paste(head(k), collapse=" "), "\n")
             cat(file=stderr(), "    head(tau)=", paste(head(tau), collapse=" "), "\n")
             cat(file=stderr(), "    head(reductionFactor)=", paste(head(rf), collapse=" "), "\n")
         }
         plot(tau, rf, type="l", lwd=2,
-             xlab="Period [s]", ylab="Solid: pressure reduction factor",
+             xlab="Period [s]", ylab="Pressure Factor",
              xaxs="i", ylim=c(0, 1), yaxs="i")
-        mtext(sprintf("Solid: pressure factor; dashed: wave length", z+H), side=3, line=0.25, adj=0)
-        mtext(sprintf("Sensor %.2fm above bottom", z+H), side=3, line=0.25, adj=1)
+        ##mtext(sprintf("Solid: pressure factor; dashed: wave length", z+H), side=3, line=-1, adj=0)
+        legend("topleft", horiz=TRUE, lty=c("solid", "dashed"), lwd=2,
+               legend=c("pressure factor", "wave length"), bg="white")
+        ##mtext(sprintf("Sensor %.1fm above bottom", z+H), side=3, line=0.25, adj=0)
         par(new=TRUE)
         plot(tau, 2*pi/k, axes=FALSE, xlab="", ylab="", type="l", lwd=2, xaxs="i", yaxs="i", lty="dashed",
              ylim=c(0, max(2*pi/k)))
         axis(4)
         mtext("Wave Length [m]", side=4, line=2)
-        grid()
-        #legend("topleft", lwd=2, col=c("black", "red"), legend=c("Pressure factor", "Wave length"), bg="white")
     }, pointsize=16)
 }
 
