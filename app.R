@@ -48,8 +48,8 @@ ui <- fluidPage(h5(paste("Wave pressure reduction through the water column (vers
                          column(6, sliderInput(inputId="hab",
                                                label="Sensor height above bottom",
                                                min=0, max=100, value=0))),
-                fluidRow(uiOutput(outputId="hover")),
-                fluidRow(plotOutput("plot", hover="hover")))
+                fluidRow(uiOutput(outputId="click")),
+                fluidRow(plotOutput("plot", click="click")))
 
 server <- function(input, output, session) {
 
@@ -57,8 +57,8 @@ server <- function(input, output, session) {
                  updateSliderInput(session=session, inputId="hab", value=0, max=input$H)
                 })
 
-    output$hover <- renderText({
-        tau <- input$hover$x
+    output$click <- renderText({
+        tau <- input$click$x
         H <- abs(input$H)
         z <- -H + input$hab
         k <- tau2k(tau, H)
