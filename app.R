@@ -1,8 +1,13 @@
 library(shiny)
 
 debug <- FALSE
-version <- "1.2"
-date <- "2019 June 30"
+version <- "1.3"
+date <- "2019 July 9"
+
+k2omega <- function(k, H, g=9.8)
+{
+    sqrt(g * k * tanh(k * H))
+}
 
 #' Wavenumber from wave period
 #' @param tau wave period [s]
@@ -11,13 +16,11 @@ date <- "2019 June 30"
 #' @return wavenumber [1/m]
 tau2k <- function(tau, H, g=9.8)
 {
-    omega <- function(k, H, g=9.8)
-        sqrt(g * k * tanh(k * H))
-    o <- 2 * pi / tau # omega [rad/s]
-    n <- length(o)
+    omega <- 2 * pi / tau # omega [rad/s]
+    n <- length(omega)
     k <- rep(NA, n)
     for (i in seq_len(n)) {
-        k[i] <- uniroot(function(K) o[i] - omega(K, H), 2*pi/c(1e3,1e-3))$root
+        k[i] <- uniroot(function(K) omega[i] - k2omega(K, H), 2*pi/c(1e3,1e-3))$root
     }
     k
 }
@@ -35,13 +38,11 @@ reductionFactor <- function(k, z, H)
 }
 
 ui <- fluidPage(h5(paste("Wave pressure reduction through the water column (version ", version, ", ", date, ")", sep="")),
-                fluidRow(column(12, radioButtons("instructions",
-                                                 "",
-                                                 choices=c("Hide Documentation", "Show Documentation"),
-                                                 selected="Hide Documentation",
-                                                 inline=TRUE))),
-                fluidRow(conditionalPanel(condition="input.instructions=='Show Documentation'",
+                fluidRow(column(12, checkboxInput("instructions", "Show instructions", value=FALSE))),
+                fluidRow(conditionalPanel(condition="input.instructions",
                                           withMathJax(includeMarkdown("wave_attenuation_help.md")))),
+                fluidRow(column(12, radioButtons("x", label=h5("Display results in terms of"),
+                                                 choices=list("Wave period"=1, "Wave length"=2), selected=1, inline=TRUE))),
                 fluidRow(column(6, sliderInput(inputId="H",
                                                label="Water depth [m]",
                                                min=1, max=100, value=20)),
@@ -64,13 +65,20 @@ server <- function(input, output, session) {
     })
 
     observeEvent(input$click, {
-        tau <- input$click$x
-        H <- abs(input$H)
-        z <- -H + input$hab
-        k <- tau2k(tau, H)
-        rf <- reductionFactor(k=k, z=z, H=H)
-        state$msg <<- paste(sprintf(" Period: %.1fs, Pressure Factor: %.2g, Wave Length: %.1fm",
-                                    tau, rf, 2 * pi / k))
+                 H <- abs(input$H)
+                 z <- -H + input$hab
+                 if (input$x == 1) {
+                     ## x is wave period
+                     tau <- input$click$x
+                     k <- tau2k(tau, H)
+                 } else {
+                     ## x is wave length
+                     k <- 2 * pi / input$click$x
+                     tau <- 2 * pi / k2omega(k, H)
+                 }
+                 rf <- reductionFactor(k=k, z=z, H=H)
+                 state$msg <<- paste(sprintf(" Period: %.1fs, Pressure Factor: %.2g, Wave Length: %.1fm",
+                                             tau, rf, 2 * pi / k))
     })
 
     output$plot <- renderPlot({
@@ -86,18 +94,32 @@ server <- function(input, output, session) {
             cat(file=stderr(), "    head(tau)=", paste(head(tau), collapse=" "), "\n")
             cat(file=stderr(), "    head(reductionFactor)=", paste(head(rf), collapse=" "), "\n")
         }
-        plot(tau, rf, type="l", lwd=2,
-             xlab="Period [s]", ylab="Pressure Factor",
-             xaxs="i", ylim=c(0, 1), yaxs="i")
-        ##mtext(sprintf("Solid: pressure factor; dashed: wave length", z+H), side=3, line=-1, adj=0)
-        legend("topleft", horiz=TRUE, lty=c("solid", "dashed"), lwd=2,
-               legend=c("Pressure Factor", "Wave Length"), bg="white")
-        ##mtext(sprintf("Sensor %.1fm above bottom", z+H), side=3, line=0.25, adj=0)
-        par(new=TRUE)
-        plot(tau, 2*pi/k, axes=FALSE, xlab="", ylab="", type="l", lwd=2, xaxs="i", yaxs="i", lty="dashed",
-             ylim=c(0, max(2*pi/k)))
-        axis(4)
-        mtext("Wave Length [m]", side=4, line=2)
+        wavelength <- 2 * pi / k
+        if (input$x == 1) {
+            plot(tau, rf, type="l", lwd=2,
+                 xlab="Period [s]", ylab="Pressure Factor",
+                 xaxs="i", ylim=c(0, 1), yaxs="i")
+            legend("topleft", horiz=TRUE, lty=c("solid", "dashed"), lwd=2,
+                   legend=c("Pressure Factor", "Wave Length"), bg="white")
+            par(new=TRUE)
+            plot(tau, wavelength, axes=FALSE, xlab="", ylab="", type="l", lwd=2, xaxs="i", yaxs="i", lty="dashed",
+                 ylim=c(0, max(wavelength)))
+            axis(4)
+            mtext("Wave Length [m]", side=4, line=2)
+        } else if (input$x == 2) {
+            plot(2*pi/k, rf, type="l", lwd=2,
+                 xlab="Wavelength [m]", ylab="Pressure Factor",
+                 xaxs="i", ylim=c(0, 1), yaxs="i")
+            legend("topleft", horiz=TRUE, lty=c("solid", "dashed"), lwd=2,
+                   legend=c("Pressure Factor", "Period"), bg="white")
+            par(new=TRUE)
+            plot(wavelength, tau, axes=FALSE, xlab="", ylab="", type="l", lwd=2, xaxs="i", yaxs="i", lty="dashed",
+                 xlim=c(0, max(wavelength)))
+            axis(4)
+            mtext("Period [s]", side=4, line=2)
+        } else {
+            stop("programming error: how can input$x not be 1 or 2?")
+        }
     }, pointsize=16)
 }
 

@@ -28,6 +28,10 @@ hyperbolic tangent function.
 
 There are many sources for the equations above, and users who want to learn
 more ought to start by consulting a textbook with which they are already
-familiar.  (A paper dealing with nonlinear waves, which is *not* the topic
-here, is https://arxiv.org/ftp/arxiv/papers/1703/1703.04654.pdf, and the
-present app uses its equation 13 for the wave-attenuation factor.)
+familiar.
+* A good introduction to the infererence of waves from pressure signals is
+  Gibbons, D. T., G. Jones, E. Siegel, A. Hay, and F. Johnson. “Performance of
+a New Submersible Tide-Wave Recorder.” In Proceedings of OCEANS 2005 MTS/IEEE,
+1057-1060 Vol. 2, 2005. https://doi.org/10.1109/OCEANS.2005.1639895.
+* A paper dealing with nonlinear waves, which is *not* the topic
+here, is https://arxiv.org/ftp/arxiv/papers/1703/1703.04654.pdf.
